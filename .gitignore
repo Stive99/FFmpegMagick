@@ -261,3 +261,9 @@ MigrationBackup/
 
 # Fody
 FodyWeavers.xml
+
+# Visual Studio Installer Projects
+*.msi
+*.msm
+*.msp
+*.vsix

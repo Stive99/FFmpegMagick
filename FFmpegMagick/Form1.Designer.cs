@@ -136,10 +136,10 @@
             AutoScaleMode = AutoScaleMode.Font;
             AutoScroll = true;
             ClientSize = new Size(800, 450);
+            Controls.Add(label1);
             Controls.Add(buttonCleanListBox);
             Controls.Add(panelUserControl);
             Controls.Add(panel2);
-            Controls.Add(label1);
             Controls.Add(listBox1);
             Controls.Add(buttonContexMenu);
             Controls.Add(panel1);
