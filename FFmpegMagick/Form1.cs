@@ -18,7 +18,7 @@ namespace FFmpegMagick
         private void Form1_Load(object sender, EventArgs e)
         {
             // Проверка обновлений
-            // Download.CheckUpdate();
+            Download.CheckUpdate();
 
             // string ffmpegPath = Utils.GetFFmpegPath();
             // if (File.Exists(ffmpegPath))
@@ -30,12 +30,11 @@ namespace FFmpegMagick
             // 	label1.Text = "ffmpeg.exe not found";
             // }
 
-            label1.Text = Utils.Cmd("ffmpeg -version");
-            label1.Text += Utils.Cmd("echo.");
-            label1.Text += Utils.Cmd("magick -version");
-            label1.Text += Utils.Cmd("echo.");
-            label1.Text += Utils.Cmd("pandoc --version");
-            // label1.Text = Utils.Cmd("ffmpeg -version & echo. & magick -version & echo. & pandoc --version");
+            // label1.Text = Utils.Cmd("ffmpeg -version");
+            // label1.Text += Utils.Cmd("echo.");
+            // label1.Text += Utils.Cmd("magick -version");
+
+            // label1.Text = Utils.Cmd("ffmpeg -version & echo. & magick -version");
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -58,46 +57,24 @@ namespace FFmpegMagick
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.F1)
-            {
-                string help = "F1 - help" +
-                    "\nF2 - ffmpeg -version" +
-                    "\nF3 - magick -version" +
-                    "\nF4 - pandoc --version" +
-                    // "\nF5 - ffmpeg -h" +
-                    // "\nF6 - magick -h" +
-                    "\nF7 - debug";
+            // if (e.KeyCode == Keys.F1)
+            // {
+            //     string help = "F1 - help" +
+            //         "\nF7 - debug";
 
-                MessageBox.Show(help);
-            }
-            if (e.KeyCode == Keys.F2)
-            {
-                // Utils.RunProcess("ffmpeg", "-version");
-            }
-            if (e.KeyCode == Keys.F3)
-            {
-                // Utils.RunProcess("magick", "-version");
-            }
-            if (e.KeyCode == Keys.F4)
-            {
-                // Utils.RunProcess("pandoc", "--version");
-            }
-            if (e.KeyCode == Keys.F5)
-            {
-                listBox1.ClearSelected();
-            }
-            if (e.KeyCode == Keys.F7)
-            {
-                label1.Visible = !label1.Visible;
-                panel1.Visible = !panel1.Visible;
-            }
-            if (e.KeyCode == Keys.F8)
-            {
-                // MessageBox.Show($"{Utils.GetSystemRootPath()}\\ffmpeg.exe");
-                Download.DownloadFFmpeg();
-                // Utils.ExtractArchive($"{Utils.GetSystemRootPath()}\\ffmpeg-git-full.7z");
-                // Download.File("https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z", $"{Utils.GetSystemRootPath()}\\ffmpeg-git-full.7z");
-            }
+            //     MessageBox.Show(help);
+            // }
+            // if (e.KeyCode == Keys.F7)
+            // {
+            //     label1.Visible = !label1.Visible;
+            // }
+            // if (e.KeyCode == Keys.F8)
+            // {
+            //     // MessageBox.Show($"{Utils.GetSystemRootPath()}\\ffmpeg.exe");
+            //     Download.DownloadFFmpeg();
+            //     // Utils.ExtractArchive($"{Utils.GetSystemRootPath()}\\ffmpeg-git-full.7z");
+            //     // Download.File("https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z", $"{Utils.GetSystemRootPath()}\\ffmpeg-git-full.7z");
+            // }
         }
 
         private void UC_Images_ClearListBoxRequested(object sender, EventArgs e)
@@ -141,13 +118,6 @@ namespace FFmpegMagick
 
             List<string> paths = new List<string>();
 
-            bool IsAllowedExtension(string extension)
-            {
-                // Список разрешенных расширений
-                string[] allowedExtensions = { ".png", ".jpg", ".gif", ".webp" };
-                return allowedExtensions.Contains(extension);
-            }
-
             foreach (string obj in (string[])e.Data.GetData(DataFormats.FileDrop))
                 if (Directory.Exists(obj))
                 {
@@ -157,7 +127,7 @@ namespace FFmpegMagick
                 {
                     // Проверка расширения файла
                     string extension = Path.GetExtension(obj).ToLower();
-                    if (IsAllowedExtension(extension))
+                    if (Utils.IsAllowedExtension(extension))
                     {
                         paths.Add(obj);
                     }
@@ -166,7 +136,7 @@ namespace FFmpegMagick
             foreach (string path in paths)
             {
                 string fileName = Path.GetFileName(path);
-                if (IsAllowedExtension(Path.GetExtension(fileName).ToLower()))
+                if (Utils.IsAllowedExtension(Path.GetExtension(fileName).ToLower()))
                 {
                     if (!listBox1.Items.Contains(path))
                     {

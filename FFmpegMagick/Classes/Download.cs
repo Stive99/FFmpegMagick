@@ -18,10 +18,10 @@ namespace FFmpegMagick.Classes
         static readonly string exename = AppDomain.CurrentDomain.FriendlyName;
         static readonly string exepath = Assembly.GetEntryAssembly().Location;
         private static readonly WebClient wc = new WebClient();
-        public static string UrlVersion = $"https://raw.githubusercontent.com/{baseDomain}/master/Properties/AssemblyInfo.cs";
+        public static string UrlVersion = $"https://raw.githubusercontent.com/{baseDomain}/main/FFmpegMagick/FFmpegMagick.csproj";
         private static readonly string VersionUpdateUrl = wc.DownloadString(UrlVersion);
-        public static string VersionUpdate = Regex.Match(VersionUpdateUrl, @"\[assembly\: AssemblyFileVersion\(""(\d+\.\d+\.\d+\.\d+)""\)\]").Groups[1].Value;
-        public static string UrlDownload = $"https://github.com/{baseDomain}/releases/download/{VersionUpdate}/Nepoisk.exe";
+        public static string VersionUpdate = Regex.Match(VersionUpdateUrl, @"\[assembly\: AssemblyVersion\(""(\d+\.\d+\.\d+\.\d+)""\)\]").Groups[1].Value;
+        public static string UrlDownload = $"https://github.com/{baseDomain}/releases/download/{VersionUpdate}/FFmpegMagick.exe";
 
         static void DownloadFile(string url, string path)
         {

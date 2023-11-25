@@ -60,6 +60,13 @@ namespace FFmpegMagick.Classes
             }
         }
 
+        public static bool IsAllowedExtension(string extension)
+        {
+            // Список разрешенных расширений
+            string[] allowedExtensions = { ".png", ".jpg", ".gif", ".webp" };
+            return allowedExtensions.Contains(extension);
+        }
+
         /// <summary>
         /// Проверка доступности интернета
         /// </summary>
