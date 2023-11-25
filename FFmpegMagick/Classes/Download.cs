@@ -20,7 +20,7 @@ namespace FFmpegMagick.Classes
         private static readonly WebClient wc = new WebClient();
         public static string UrlVersion = $"https://raw.githubusercontent.com/{baseDomain}/main/FFmpegMagick/FFmpegMagick.csproj";
         private static readonly string VersionUpdateUrl = wc.DownloadString(UrlVersion);
-        public static string VersionUpdate = Regex.Match(VersionUpdateUrl, @"\[assembly\: AssemblyVersion\(""(\d+\.\d+\.\d+\.\d+)""\)\]").Groups[1].Value;
+        public static string VersionUpdate = Regex.Match(VersionUpdateUrl, @"<AssemblyVersion>(\d+\.\d+\.\d+\.\d+)</AssemblyVersion>").Groups[1].Value;
         public static string UrlDownload = $"https://github.com/{baseDomain}/releases/download/{VersionUpdate}/FFmpegMagick.exe";
 
         static void DownloadFile(string url, string path)
