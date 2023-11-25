@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using FFmpegMagick.Classes;
 using FFmpegMagick.UserControls;
 
@@ -40,19 +41,19 @@ namespace FFmpegMagick
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             // Удаление старого файла, если существует
-            string oldFilePath = "FFmpegMagickOldVersion.exe";
-            if (File.Exists(oldFilePath))
-            {
-                try
-                {
-                    File.Delete(oldFilePath);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Ошибка удаления старого файла: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-            }
+            // string oldFilePath = "FFmpegMagickOldVersion.exe";
+            // if (File.Exists(oldFilePath))
+            // {
+            //     try
+            //     {
+            //         File.Delete(oldFilePath);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         MessageBox.Show($"Ошибка удаления старого файла: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //         return;
+            //     }
+            // }
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)

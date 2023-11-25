@@ -1,51 +1,80 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
 
 namespace FFmpegMagick.Classes
 {
     internal class Archive
     {
-        public static void ExtractArchive(string archiveFilePath)
+        /// <summary>
+        /// Скачивание и распаковка архива
+        /// </summary>
+        /// <param name="url">URL для скачивания архива</param>
+        /// <param name="filename">Имя файла архива</param>
+        /// <param name="targetDirectory">Путь, куда нужно распаковать архив</param>
+        public static void DownloadAndExtractArchive(string url, string filename, string targetDirectory)
         {
+            // Полный путь к архиву
+            string archivePath = Path.Combine(targetDirectory, filename);
+
+            // Скачиваем архив
+            using (WebClient client = new WebClient())
+            {
+                client.DownloadFile(url, archivePath);
+            }
+
+            // Распаковываем архив в текущую папку с заменой файлов
+            ZipFile.ExtractToDirectory(archivePath, targetDirectory, true);
+
+            // Опционально: Удаляем загруженный архив, если он больше не нужен
+            File.Delete(archivePath);
+
+            Console.WriteLine("Архив успешно скачан и распакован.");
+        }
+
+        public static void ExtractArchive()
+        {
+            // Имя файла архива RAR
+            string archiveFileName = "FFmpegMagick.rar";
+
+            // Путь, куда нужно распаковать архив
+            string targetDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            // Полный путь к архиву RAR
+            string archivePath = Path.Combine(targetDirectory, archiveFileName);
+
             try
             {
-                // Замените "7z" на полный путь к исполняемому файлу 7-Zip, если он не в PATH
-                string sevenZipPath = "7z";
-
-                using (Process process = new Process())
+                using (var archive = RarArchive.Open(archivePath))
                 {
-                    ProcessStartInfo startInfo = new ProcessStartInfo
+                    foreach (var entry in archive.Entries)
                     {
-                        FileName = sevenZipPath,
-                        Arguments = $"x \"{archiveFilePath}\" -o\"{Environment.CurrentDirectory}\" -y",
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    process.StartInfo = startInfo;
-                    process.Start();
-
-                    process.WaitForExit();
-
-                    if (process.ExitCode == 0)
-                    {
-                        MessageBox.Show($"Архив успешно распакован в текущую папку.");
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Ошибка распаковки архива. Код завершения: {process.ExitCode}");
+                        try {
+                            entry.WriteToDirectory(targetDirectory, new SharpCompress.Common.ExtractionOptions()
+                            {
+                                ExtractFullPath = true,
+                                Overwrite = true
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Ошибка при распаковке файла {entry.Key}: {ex.Message}");
+                        }
                     }
                 }
+
+                MessageBox.Show("Архив успешно распакован.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при выполнении операции: {ex.Message}");
+                MessageBox.Show($"Ошибка при распаковке архива: {ex.Message}");
             }
         }
     }

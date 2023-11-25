@@ -15,4 +15,8 @@
     <Exec Command="copy &quot;$(ProjectDir)ffmpegmagick.reg&quot; &quot;$(TargetDir)&quot;" />
   </Target>
 
+  <ItemGroup>
+    <PackageReference Include="SharpCompress" Version="0.34.2" />
+  </ItemGroup>
+
 </Project>

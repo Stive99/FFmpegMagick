@@ -108,11 +108,6 @@ namespace FFmpegMagick.Classes
             return "null";
         }
 
-        // internal static void RunProcess(string v1, string v2)
-        // {
-        // 	throw new NotImplementedException();
-        // }
-
         static async Task OpenWebsiteAsync(string url)
         {
             Process websiteProcess = Process.Start(new ProcessStartInfo

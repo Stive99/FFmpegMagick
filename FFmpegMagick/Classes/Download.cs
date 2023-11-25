@@ -21,7 +21,7 @@ namespace FFmpegMagick.Classes
         public static string UrlVersion = $"https://raw.githubusercontent.com/{baseDomain}/main/FFmpegMagick/FFmpegMagick.csproj";
         private static readonly string VersionUpdateUrl = wc.DownloadString(UrlVersion);
         public static string VersionUpdate = Regex.Match(VersionUpdateUrl, @"<AssemblyVersion>(\d+\.\d+\.\d+\.\d+)</AssemblyVersion>").Groups[1].Value;
-        public static string UrlDownload = $"https://github.com/{baseDomain}/releases/download/{VersionUpdate}/FFmpegMagick.exe";
+        public static string UrlDownload = $"https://github.com/{baseDomain}/releases/download/{VersionUpdate}/FFmpegMagick.rar";
 
         static void DownloadFile(string url, string path)
         {
@@ -66,6 +66,7 @@ namespace FFmpegMagick.Classes
                     if (MessageBox.Show("Текущая версия программы " + version + "\nНовое обновление доступно " + VersionUpdate + "\n\nТребуется обновление.\nОбновить программу до актуальной версии?", "Найдено новое обновление!", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
                         DownloadUpdate();
+                        return;
                     }
                 }
             }
@@ -76,24 +77,23 @@ namespace FFmpegMagick.Classes
         /// </summary>
         public static void DownloadUpdate()
         {
-            string currentFilePath = Path.GetFileName(Application.ExecutablePath);
-            string oldFilePath = "FFmpegMagickOldVersion.exe";
-            string newFilePath = Path.Combine(Environment.CurrentDirectory, "FFmpegMagickNewVersion.exe");
-            string hashFilePath = Path.Combine(Environment.CurrentDirectory, "FFmpegMagickNewVersion.hash");
+            // string currentFilePath = Path.GetFileName(Application.ExecutablePath);
+            // string oldFilePath = "FFmpegMagickOldVersion.exe";
+            string newFilePath = Path.Combine(Environment.CurrentDirectory, "FFmpegMagick.rar");
 
-            // Удаление старого файла, если существует
-            if (File.Exists(oldFilePath))
-            {
-                try
-                {
-                    File.Delete(oldFilePath);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Ошибка удаления старого файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-            }
+            // // Удаление старого файла, если существует
+            // if (File.Exists(oldFilePath))
+            // {
+            //     try
+            //     {
+            //         File.Delete(oldFilePath);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         MessageBox.Show("Ошибка удаления старого файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //         return;
+            //     }
+            // }
 
             // Скачивание новой версии
             using (WebClient wc = new WebClient())
@@ -106,6 +106,7 @@ namespace FFmpegMagick.Classes
                     {
                         wc.DownloadFile(new Uri(UrlDownload), newFilePath);
                         success = true;
+                        // Archive.ExtractArchive();
                     }
                     catch (Exception ex)
                     {
@@ -119,56 +120,57 @@ namespace FFmpegMagick.Classes
                 }
             }
 
-            // Проверка целостности файла
-            if (File.Exists(hashFilePath))
-            {
-                string expectedHash = File.ReadAllText(hashFilePath);
-                using (var md5 = MD5.Create())
-                {
-                    using (var stream = File.OpenRead(newFilePath))
-                    {
-                        string actualHash = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLower();
-                        if (expectedHash != actualHash)
-                        {
-                            MessageBox.Show("Ошибка проверки целостности файла!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
-                    }
-                }
-            }
+            // // Проверка целостности файла
+            // if (File.Exists(hashFilePath))
+            // {
+            //     string expectedHash = File.ReadAllText(hashFilePath);
+            //     using (var md5 = MD5.Create())
+            //     {
+            //         using (var stream = File.OpenRead(newFilePath))
+            //         {
+            //             string actualHash = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLower();
+            //             if (expectedHash != actualHash)
+            //             {
+            //                 MessageBox.Show("Ошибка проверки целостности файла!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //                 return;
+            //             }
+            //         }
+            //     }
+            // }
 
-            // Перемещение текущего файла
-            try
-            {
-                File.Move(currentFilePath, oldFilePath);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Ошибка перемещения файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            // // Перемещение текущего файла
+            // try
+            // {
+            //     File.Move(currentFilePath, oldFilePath);
+            // }
+            // catch (Exception ex)
+            // {
+            //     MessageBox.Show("Ошибка перемещения файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //     return;
+            // }
 
-            // Замена старой версии новой
-            try
-            {
-                File.Move(newFilePath, currentFilePath);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Ошибка замены старой версии новой: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            // // Замена старой версии новой
+            // try
+            // {
+            //     File.Move(newFilePath, currentFilePath);
+            // }
+            // catch (Exception ex)
+            // {
+            //     MessageBox.Show("Ошибка замены старой версии новой: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //     return;
+            // }
 
-            // Запуск новой версии
-            try
-            {
-                Process.Start(currentFilePath);
-                Application.Exit();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Ошибка запуска файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            // // Запуск новой версии
+            // try
+            // {
+            //     Process.Start(currentFilePath);
+            //     Application.Exit();
+            // }
+            // catch (Exception ex)
+            // {
+            //     MessageBox.Show("Ошибка запуска файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            // }
+
         }
 
         public static async Task DownloadAsync(string url, string path)
