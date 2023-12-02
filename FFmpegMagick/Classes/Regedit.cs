@@ -1,54 +1,9 @@
 ﻿using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FFmpegMagick.Classes
 {
     internal class Regedit
     {
-        public static void StartReg()
-        {
-            // string regFilePath = @"F:\Download\ffmpeg.reg";
-            string regFilePath = "ffmpegmagick.reg";
-
-            try
-            {
-                ProcessStartInfo processStartInfo = new ProcessStartInfo
-                {
-                    FileName = "regedit.exe",
-                    Arguments = $@"/s ""{regFilePath}""",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using (Process process = new Process { StartInfo = processStartInfo })
-                {
-                    process.Start();
-                    process.WaitForExit();
-
-                    int exitCode = process.ExitCode;
-                    if (exitCode == 0)
-                    {
-                        // MessageBox.Show("Реестр успешно обновлен.");
-                    }
-                    else
-                    {
-                        // MessageBox.Show($"Ошибка при обновлении реестра. Код ошибки: {exitCode}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Произошла ошибка: {ex.Message}");
-            }
-        }
-
         /// <summary>
         /// Получение уровня UAC
         /// 0 - Отключен - не уведомлять (Never notify).
@@ -80,6 +35,19 @@ namespace FFmpegMagick.Classes
             }
 
             return -1; // В случае ошибки или если значение не удалось получить
+        }
+
+        public static void Reg()
+        {
+            string reg = "ffmpegmagick.reg";
+            if (File.Exists(reg))
+            {
+                Utils.Cmd($"regedit /s {reg}");
+            }
+            else
+            {
+                MessageBox.Show($"Файл {reg} не найден!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

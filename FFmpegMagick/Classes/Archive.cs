@@ -1,81 +1,68 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using SharpCompress.Archives;
-using SharpCompress.Archives.Rar;
+﻿using SharpCompress.Archives;
+using SharpCompress.Archives.SevenZip;
+using SharpCompress.Archives.Zip;
+using SharpCompress.Common;
 
 namespace FFmpegMagick.Classes
 {
     internal class Archive
     {
+        // Делегат для обновления прогресса
+        public delegate void ProgressUpdateHandler(int current, int total);
+
+        // Событие для уведомления об обновлении прогресса
+        public event ProgressUpdateHandler ProgressUpdated = null!;
+
         /// <summary>
-        /// Скачивание и распаковка архива
+        /// Асинхронное скачивание и распаковка архива
         /// </summary>
-        /// <param name="url">URL для скачивания архива</param>
         /// <param name="filename">Имя файла архива</param>
+        /// <param name="type">Тип архива</param>
         /// <param name="targetDirectory">Путь, куда нужно распаковать архив</param>
-        public static void DownloadAndExtractArchive(string url, string filename, string targetDirectory)
+        public async Task Extract(string filename, string type, string targetDirectory)
         {
-            // Полный путь к архиву
-            string archivePath = Path.Combine(targetDirectory, filename);
+            string fileExtension = Path.GetExtension(filename);
+            type = fileExtension.EndsWith(".7z") ? "7z" : "zip";
 
-            // Скачиваем архив
-            using (WebClient client = new WebClient())
+            await Task.Run(() =>
             {
-                client.DownloadFile(url, archivePath);
-            }
+                IArchive archive;
 
-            // Распаковываем архив в текущую папку с заменой файлов
-            ZipFile.ExtractToDirectory(archivePath, targetDirectory, true);
-
-            // Опционально: Удаляем загруженный архив, если он больше не нужен
-            File.Delete(archivePath);
-
-            Console.WriteLine("Архив успешно скачан и распакован.");
-        }
-
-        public static void ExtractArchive()
-        {
-            // Имя файла архива RAR
-            string archiveFileName = "FFmpegMagick.rar";
-
-            // Путь, куда нужно распаковать архив
-            string targetDirectory = AppDomain.CurrentDomain.BaseDirectory;
-
-            // Полный путь к архиву RAR
-            string archivePath = Path.Combine(targetDirectory, archiveFileName);
-
-            try
-            {
-                using (var archive = RarArchive.Open(archivePath))
+                switch (type)
                 {
-                    foreach (var entry in archive.Entries)
-                    {
-                        try {
-                            entry.WriteToDirectory(targetDirectory, new SharpCompress.Common.ExtractionOptions()
-                            {
-                                ExtractFullPath = true,
-                                Overwrite = true
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Ошибка при распаковке файла {entry.Key}: {ex.Message}");
-                        }
-                    }
+                    case "7z":
+                        archive = SevenZipArchive.Open(filename);
+                        break;
+                    case "zip":
+                        archive = ZipArchive.Open(filename);
+                        break;
+                    default:
+                        // Неизвестный формат архива
+                        return;
                 }
 
-                MessageBox.Show("Архив успешно распакован.");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при распаковке архива: {ex.Message}");
-            }
+                int totalEntries = archive.Entries.Count();
+                int processedEntries = 0;
+
+                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                {
+                    entry.WriteToDirectory(targetDirectory, new ExtractionOptions()
+                    {
+                        ExtractFullPath = true,
+                        Overwrite = true
+                    });
+
+                    processedEntries++;
+                    OnProgressUpdated(processedEntries, totalEntries);
+                }
+            });
+        }
+
+        // Метод для вызова асинхронного события обновления прогресса
+        protected virtual void OnProgressUpdated(int current, int total)
+        {
+            // Проверяем, есть ли подписчики на событие
+            ProgressUpdated?.Invoke(current, total);
         }
     }
 }

@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace FFmpegMagick.Classes
 {
     internal class Utils
     {
-        public static string Cmd(string promt)
+        public static string CmdString(string promt)
         {
-            StringBuilder outputBuilder = new StringBuilder();
+            StringBuilder outputBuilder = new();
 
             try
             {
@@ -34,36 +30,45 @@ namespace FFmpegMagick.Classes
 
                     process.WaitForExit();
 
-                    // Добавить пустую строку
-                    outputBuilder.AppendLine();
-
-
-                    // if (process.ExitCode == 1)
-                    // {
-                    //     //
-                    // }
-
                     // Проверяем ExitCode
-                    // if (process.ExitCode != 0)
-                    // {
-                    //     // System.Windows.Forms.MessageBox.Show($"Command execution failed with exit code: {process.ExitCode}");
-                    //     return $"Command execution failed with exit code: {process.ExitCode}";
-                    // }
+                    if (process.ExitCode != 0)
+                    {
+                        return $"Выполнение команды завершилось неудачей с кодом выхода: {process.ExitCode}";
+                    }
                 }
 
                 return outputBuilder.ToString();
             }
             catch (Exception ex)
             {
-                return $"Error executing command: {ex.Message}";
+                return $"Ошибка при выполнении команды: {ex.Message}";
                 // return null;
             }
         }
 
+        public static void Cmd(string line)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c {line}",
+                    WindowStyle = ProcessWindowStyle.Hidden
+                });
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Проверка расширения файла
+        /// </summary>
+        /// <param name="extension"></param>
+        /// <returns></returns>
         public static bool IsAllowedExtension(string extension)
         {
             // Список разрешенных расширений
-            string[] allowedExtensions = { ".png", ".jpg", ".gif", ".webp" };
+            string[] allowedExtensions = [".png", ".jpg", ".gif", ".webp"];
             return allowedExtensions.Contains(extension);
         }
 
@@ -81,55 +86,6 @@ namespace FFmpegMagick.Classes
             {
                 return false;
             }
-        }
-
-        public static string GetFFmpegPath()
-        {
-            // string ffmpegPath = Path.Combine(
-            // 	Path.GetDirectoryName(
-            // 		System.Reflection.Assembly.GetExecutingAssembly().Location),
-            // 	"ffmpeg.exe");
-            // return ffmpegPath;
-
-            string ffmpegFileName = "ffmpeg.exe";
-            string systemRootPath = SysFolder.Windows;
-
-            if (!string.IsNullOrEmpty(systemRootPath))
-            {
-                // string ffmpegPathInSystemRoot = Path.Combine(systemRootPath, "System32", ffmpegFileName);
-
-                if (File.Exists(systemRootPath))
-                {
-                    return systemRootPath;
-                }
-            }
-
-            // return null;
-            return "null";
-        }
-
-        static async Task OpenWebsiteAsync(string url)
-        {
-            Process websiteProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = url,
-                UseShellExecute = true
-            });
-
-            // Дожидаемся завершения процесса открытия сайта
-            await Task.Run(() => websiteProcess.WaitForExit());
-        }
-
-        public static void OpenWebsite(string url)
-        {
-            Process websiteProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = url,
-                UseShellExecute = true
-            });
-
-            // Дожидаемся завершения процесса открытия сайта
-            Task.Run(() => websiteProcess.WaitForExit()).Wait();
         }
     }
 }

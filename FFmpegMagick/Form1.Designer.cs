@@ -28,27 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            label1 = new Label();
             panel1 = new Panel();
             labelDragAndDrop = new Label();
             buttonContexMenu = new Button();
             listBox1 = new ListBox();
             panel2 = new Panel();
+            buttonSettings = new Button();
             buttonImages = new Button();
             panelUserControl = new Panel();
             buttonCleanListBox = new Button();
             panel1.SuspendLayout();
             panel2.SuspendLayout();
             SuspendLayout();
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(12, 9);
-            label1.Name = "label1";
-            label1.Size = new Size(35, 13);
-            label1.TabIndex = 0;
-            label1.Text = "label1";
             // 
             // panel1
             // 
@@ -96,11 +87,22 @@
             // panel2
             // 
             panel2.BackColor = SystemColors.AppWorkspace;
+            panel2.Controls.Add(buttonSettings);
             panel2.Controls.Add(buttonImages);
             panel2.Location = new Point(12, 153);
             panel2.Name = "panel2";
             panel2.Size = new Size(776, 29);
             panel2.TabIndex = 5;
+            // 
+            // buttonSettings
+            // 
+            buttonSettings.Location = new Point(701, 3);
+            buttonSettings.Name = "buttonSettings";
+            buttonSettings.Size = new Size(72, 23);
+            buttonSettings.TabIndex = 1;
+            buttonSettings.Text = "Настройки";
+            buttonSettings.UseVisualStyleBackColor = true;
+            buttonSettings.Click += buttonSettings_Click;
             // 
             // buttonImages
             // 
@@ -136,7 +138,6 @@
             AutoScaleMode = AutoScaleMode.Font;
             AutoScroll = true;
             ClientSize = new Size(800, 450);
-            Controls.Add(label1);
             Controls.Add(buttonCleanListBox);
             Controls.Add(panelUserControl);
             Controls.Add(panel2);
@@ -149,19 +150,15 @@
             MinimumSize = new Size(816, 489);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
+            Tag = "beta";
             Text = "FFmpegMagick";
-            FormClosed += Form1_FormClosed;
             Load += Form1_Load;
-            KeyDown += Form1_KeyDown;
             panel1.ResumeLayout(false);
             panel2.ResumeLayout(false);
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
-
-        private Label label1;
         private Panel panel1;
         private Button buttonContexMenu;
         private Label labelDragAndDrop;
@@ -170,5 +167,6 @@
         private Button buttonImages;
         private Button buttonCleanListBox;
         public ListBox listBox1;
+        private Button buttonSettings;
     }
 }

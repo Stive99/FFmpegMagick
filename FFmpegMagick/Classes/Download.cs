@@ -1,239 +1,96 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
-namespace FFmpegMagick.Classes
+﻿namespace FFmpegMagick.Classes
 {
     internal class Download
     {
-        static readonly string baseDomain = "Stive99/FFmpegMagick";
-        static readonly string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        static readonly string exename = AppDomain.CurrentDomain.FriendlyName;
-        static readonly string exepath = Assembly.GetEntryAssembly().Location;
-        private static readonly WebClient wc = new WebClient();
-        public static string UrlVersion = $"https://raw.githubusercontent.com/{baseDomain}/main/FFmpegMagick/FFmpegMagick.csproj";
-        private static readonly string VersionUpdateUrl = wc.DownloadString(UrlVersion);
-        public static string VersionUpdate = Regex.Match(VersionUpdateUrl, @"<AssemblyVersion>(\d+\.\d+\.\d+\.\d+)</AssemblyVersion>").Groups[1].Value;
-        public static string UrlDownload = $"https://github.com/{baseDomain}/releases/download/{VersionUpdate}/FFmpegMagick.rar";
-
-        static void DownloadFile(string url, string path)
-        {
-            using (WebClient wc = new WebClient())
-            {
-                bool success = false;
-                int retriesLeft = 3;
-                while (!success && retriesLeft > 0)
-                {
-                    try
-                    {
-                        wc.DownloadFile(new Uri(url), path);
-                        success = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        retriesLeft--;
-                        if (retriesLeft == 0)
-                        {
-                            MessageBox.Show($"Ошибка скачивания файла: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
         /// <summary>
-        /// Проверка обновлений
+        /// Скачивание файла
         /// </summary>
-        public static void CheckUpdate()
+        /// <param name="url">Ссылка на файл</param>
+        /// <param name="path">Путь для сохранения файла</param>
+        /// <param name="maxRetries">Максимальное количество попыток скачивания</param>
+        /// <param name="retryDelayMilliseconds">Задержка перед повторной попыткой скачивания</param>
+        /// <param name="cancellationToken">Токен отмены</param>
+        public static async Task DownloadFile(string url, string path, ProgressBar progressBar = null, Button cancelButton = null, int maxRetries = 3, int retryDelayMilliseconds = 1000, CancellationToken cancellationToken = default)
         {
-            if (Utils.OK())
+            using (HttpClient httpClient = new())
             {
-                // if (Convert.ToDouble(version, CultureInfo.InvariantCulture) == Convert.ToDouble(VersionUpdate, CultureInfo.InvariantCulture))
-                if (version == VersionUpdate)
-                {
-                    // MessageBox.Show("У вас установлена последняя версия программы!", "Обновления не найдены", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    if (MessageBox.Show("Текущая версия программы " + version + "\nНовое обновление доступно " + VersionUpdate + "\n\nТребуется обновление.\nОбновить программу до актуальной версии?", "Найдено новое обновление!", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                    {
-                        DownloadUpdate();
-                        return;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Скачивание обновлений
-        /// </summary>
-        public static void DownloadUpdate()
-        {
-            // string currentFilePath = Path.GetFileName(Application.ExecutablePath);
-            // string oldFilePath = "FFmpegMagickOldVersion.exe";
-            string newFilePath = Path.Combine(Environment.CurrentDirectory, "FFmpegMagick.rar");
-
-            // // Удаление старого файла, если существует
-            // if (File.Exists(oldFilePath))
-            // {
-            //     try
-            //     {
-            //         File.Delete(oldFilePath);
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         MessageBox.Show("Ошибка удаления старого файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //         return;
-            //     }
-            // }
-
-            // Скачивание новой версии
-            using (WebClient wc = new WebClient())
-            {
-                bool success = false;
-                int retriesLeft = 3;
-                while (!success && retriesLeft > 0)
+                for (int retry = 0; retry < maxRetries; retry++)
                 {
                     try
                     {
-                        wc.DownloadFile(new Uri(UrlDownload), newFilePath);
-                        success = true;
-                        // Archive.ExtractArchive();
+                        using (HttpResponseMessage response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
+                        {
+                            response.EnsureSuccessStatusCode();
+
+                            long? totalBytes = response.Content.Headers.ContentLength;
+                            using (Stream contentStream = await response.Content.ReadAsStreamAsync())
+                            {
+                                using (FileStream fileStream = File.Create(path))
+                                {
+                                    await CopyToWithProgressAsync(contentStream, fileStream, totalBytes, cancellationToken, progressBar, cancelButton);
+                                    return; // Выход из цикла при успешном скачивании
+                                }
+                            }
+                        }
+                    }
+                    catch (HttpRequestException) when (retry < maxRetries - 1)
+                    {
+                        // Ошибка HTTP запроса, подождем перед повторной попыткой
+                        await Task.Delay(retryDelayMilliseconds, cancellationToken);
                     }
                     catch (Exception ex)
                     {
-                        retriesLeft--;
-                        if (retriesLeft == 0)
-                        {
-                            MessageBox.Show("Ошибка скачивания файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
+                        // Логирование ошибки
+                        MessageBox.Show($"Ошибка скачивания файла: {ex.Message}", "Ошибка скачивания", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break; // Выход из цикла при критической ошибке
                     }
                 }
             }
-
-            // // Проверка целостности файла
-            // if (File.Exists(hashFilePath))
-            // {
-            //     string expectedHash = File.ReadAllText(hashFilePath);
-            //     using (var md5 = MD5.Create())
-            //     {
-            //         using (var stream = File.OpenRead(newFilePath))
-            //         {
-            //             string actualHash = BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLower();
-            //             if (expectedHash != actualHash)
-            //             {
-            //                 MessageBox.Show("Ошибка проверки целостности файла!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //                 return;
-            //             }
-            //         }
-            //     }
-            // }
-
-            // // Перемещение текущего файла
-            // try
-            // {
-            //     File.Move(currentFilePath, oldFilePath);
-            // }
-            // catch (Exception ex)
-            // {
-            //     MessageBox.Show("Ошибка перемещения файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //     return;
-            // }
-
-            // // Замена старой версии новой
-            // try
-            // {
-            //     File.Move(newFilePath, currentFilePath);
-            // }
-            // catch (Exception ex)
-            // {
-            //     MessageBox.Show("Ошибка замены старой версии новой: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //     return;
-            // }
-
-            // // Запуск новой версии
-            // try
-            // {
-            //     Process.Start(currentFilePath);
-            //     Application.Exit();
-            // }
-            // catch (Exception ex)
-            // {
-            //     MessageBox.Show("Ошибка запуска файла: " + ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            // }
-
         }
 
-        public static async Task DownloadAsync(string url, string path)
+        private static async Task CopyToWithProgressAsync(Stream source, Stream destination, long? totalBytes, CancellationToken cancellationToken, ProgressBar progressBar = null, Button cancelButton = null)
         {
-            using (WebClient wc = new WebClient())
+            const int bufferSize = 81920; // 80 KB
+
+            byte[] buffer = new byte[bufferSize];
+            long totalBytesRead = 0;
+            int bytesRead;
+            int previousProgressPercentage = 0;
+
+            while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
             {
-                bool success = false;
-                int retriesLeft = 3;
+                await destination.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                totalBytesRead += bytesRead;
 
-                while (!success && retriesLeft > 0)
+                int progressPercentage = totalBytes.HasValue
+                    ? (int)(totalBytesRead * 100 / totalBytes.Value)
+                    : 0;
+
+                if (progressBar != null && progressPercentage != previousProgressPercentage)
                 {
-                    try
-                    {
-                        await wc.DownloadFileTaskAsync(new Uri(url), path);
-                        success = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        retriesLeft--;
-                        if (retriesLeft == 0)
-                        {
-                            MessageBox.Show($"Ошибка скачивания файла: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                        else
-                        {
-                            // Добавьте задержку перед повторной попыткой
-                            await Task.Delay(1000);
-                        }
-                    }
+                    progressBar.Value = progressPercentage;
+                    Application.DoEvents(); // Обновление UI
+                    previousProgressPercentage = progressPercentage;
+                }
+
+                if (cancellationToken.IsCancellationRequested && cancelButton != null)
+                {
+                    cancelButton.Enabled = false; // Отключаем кнопку отмены, чтобы избежать дополнительных попыток
+                    throw new OperationCanceledException("Скачивание отменено.", cancellationToken);
                 }
             }
+
+            // progressBar?.Value = 100; // Устанавливаем полный прогресс, поскольку операция завершена
+            UpdateProgressBar(progressBar, 100);
         }
 
-        public static void DownloadFFmpeg()
+        private static void UpdateProgressBar(ProgressBar progressBar, int progressPercentage)
         {
-            // string ffmpegPath = GetFFmpegPath();
-            // if (!File.Exists(ffmpegPath))
-            // {
-            DownloadAsync("https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z", $"{SysFolder.Temp}\\ffmpeg-git-full.7z");
-            // ZipFile.ExtractToDirectory("ffmpeg.zip", ".");
-            // File.Delete("ffmpeg.zip");
-            // Directory.Move("ffmpeg-4.3.1-win64-static", "ffmpeg");
-            // }
-        }
-
-        public static void DownloadMagick()
-        {
-            // string magickPath = GetMagickPath();
-            // if (!File.Exists(magickPath))
-            // {
-            DownloadAsync("https://www.imagemagick.org/download/binaries/ImageMagick-7.0.10-60-Q16-HDRI-x64-dll.exe", $"{SysFolder.Temp}\\ImageMagick-7.0.10-60-Q16-HDRI-x64-dll.exe");
-            // ZipFile.ExtractToDirectory("ffmpeg.zip", ".");
-            // File.Delete("ffmpeg.zip");
-            // Directory.Move("ffmpeg-4.3.1-win64-static", "ffmpeg");
-            // }
-        }
-
-        public static void DownloadPandoc()
-        {
-            // string pandocPath = GetPandocPath();
-            // if (!File.Exists(pandocPath))
-            // {
-            // DownloadAsync("");
+            if (progressBar != null)
+            {
+                progressBar.Value = progressPercentage;
+                Application.DoEvents(); // Обновление UI
+            }
         }
     }
 }

@@ -7,75 +7,19 @@ namespace FFmpegMagick
 {
     public partial class Form1 : Form
     {
-        private UC_Images uc_images;
+        private readonly UC_Images uc_images = new();
+        private readonly UC_Settings uc_settings = new();
 
         public Form1()
         {
             Directory.SetCurrentDirectory(AppContext.BaseDirectory);
             InitializeComponent();
-            label1.Visible = false;
+            ArgsProgram.Args();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            // Проверка обновлений
-            Download.CheckUpdate();
-
-            // string ffmpegPath = Utils.GetFFmpegPath();
-            // if (File.Exists(ffmpegPath))
-            // {
-            // 	label1.Text = ffmpegPath;
-            // }
-            // else
-            // {
-            // 	label1.Text = "ffmpeg.exe not found";
-            // }
-
-            // label1.Text = Utils.Cmd("ffmpeg -version");
-            // label1.Text += Utils.Cmd("echo.");
-            // label1.Text += Utils.Cmd("magick -version");
-
-            // label1.Text = Utils.Cmd("ffmpeg -version & echo. & magick -version");
-        }
-
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            // Удаление старого файла, если существует
-            // string oldFilePath = "FFmpegMagickOldVersion.exe";
-            // if (File.Exists(oldFilePath))
-            // {
-            //     try
-            //     {
-            //         File.Delete(oldFilePath);
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         MessageBox.Show($"Ошибка удаления старого файла: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //         return;
-            //     }
-            // }
-        }
-
-        private void Form1_KeyDown(object sender, KeyEventArgs e)
-        {
-            // if (e.KeyCode == Keys.F1)
-            // {
-            //     string help = "F1 - help" +
-            //         "\nF7 - debug";
-
-            //     MessageBox.Show(help);
-            // }
-            // if (e.KeyCode == Keys.F7)
-            // {
-            //     label1.Visible = !label1.Visible;
-            // }
-            // if (e.KeyCode == Keys.F8)
-            // {
-            //     // MessageBox.Show($"{Utils.GetSystemRootPath()}\\ffmpeg.exe");
-            //     Download.DownloadFFmpeg();
-            //     // Utils.ExtractArchive($"{Utils.GetSystemRootPath()}\\ffmpeg-git-full.7z");
-            //     // Download.File("https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z", $"{Utils.GetSystemRootPath()}\\ffmpeg-git-full.7z");
-            // }
+            Updater.CheckUpdate();
         }
 
         private void UC_Images_ClearListBoxRequested(object sender, EventArgs e)
@@ -93,10 +37,7 @@ namespace FFmpegMagick
 
         private void button1_Click(object sender, EventArgs e)
         {
-            // Process.Start("regidit /s F:\\Download\\ffmpeg.reg");
-            // Utils.Cmd("regidit /s @F:\\Download\\ffmpeg.reg");
-            Regedit.StartReg();
-            // MessageBox.Show(Utils.Cmd("regidit /s \"F:\\Download\\ffmpeg.reg\""));
+            Regedit.Reg();
         }
 
         private void panel1_DragEnter(object sender, DragEventArgs e)
@@ -117,7 +58,7 @@ namespace FFmpegMagick
         {
             labelDragAndDrop.Text = "Перетащите файлы сюда";
 
-            List<string> paths = new List<string>();
+            List<string> paths = [];
 
             foreach (string obj in (string[])e.Data.GetData(DataFormats.FileDrop))
                 if (Directory.Exists(obj))
@@ -141,7 +82,7 @@ namespace FFmpegMagick
                 {
                     if (!listBox1.Items.Contains(path))
                     {
-                    	listBox1.Items.Add(path);
+                        listBox1.Items.Add(path);
                     }
                     // if (!listBox1.Items.Contains(fileName))
                     // {
@@ -153,25 +94,49 @@ namespace FFmpegMagick
 
         private void panel1_Click(object sender, EventArgs e)
         {
-            // OpenFileDialog openFileDialog = new OpenFileDialog();
-            // openFileDialog.Multiselect = true;
-            // openFileDialog.Filter = "All files (*.*)|*.*";
-            // openFileDialog.InitialDirectory = SysFolder.Desktop;
+            if (Regedit.GetUACLevel() == 2)
+            {
+                OpenFileDialog openFileDialog = new()
+                {
+                    Multiselect = true,
+                    Filter = "All images files (*.*)|*.*",
+                    InitialDirectory = SysFolder.Desktop
+                };
 
-            // if (openFileDialog.ShowDialog() == DialogResult.OK)
-            // {
-            // 	foreach (string file in openFileDialog.FileNames)
-            // 	{
-            // 		if (!listBox1.Items.Contains(file))
-            // 		{
-            // 			listBox1.Items.Add(file);
-            // 		}
-            // 	}
-            // 	// label2.Text = openFileDialog.FileName;
-            // 	// listBox1.Items.Add(openFileDialog.FileName);
-            //	// label2.Text = string.Join("\r\n", paths);
-            //	// listBox1.Items.AddRange(paths.ToArray());
-            // }
+                // FolderBrowserDialog folderBrowserDialog = new()
+                // {
+                //     ShowNewFolderButton = false,
+                //     RootFolder = Environment.SpecialFolder.Desktop
+                // };
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    foreach (string file in openFileDialog.FileNames)
+                    {
+                        if (!listBox1.Items.Contains(file))
+                        {
+                            if (Utils.IsAllowedExtension(Path.GetExtension(file).ToLower()))
+                            {
+                                listBox1.Items.Add(file);
+                            }
+                        }
+                    }
+                }
+
+                // if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                // {
+                //     foreach (string file in Directory.GetFiles(folderBrowserDialog.SelectedPath))
+                //     {
+                //         if (!listBox1.Items.Contains(file))
+                //         {
+                //             if (Utils.IsAllowedExtension(Path.GetExtension(file).ToLower()))
+                //             {
+                //                 listBox1.Items.Add(file);
+                //             }
+                //         }
+                //     }
+                // }
+            }
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
@@ -183,22 +148,17 @@ namespace FFmpegMagick
 
         private void button2_Click(object sender, EventArgs e)
         {
-            // Если listBox пустой
-            if (listBox1.Items.Count == 0)
-            {
-                MessageBox.Show("Список файлов пуст!", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            else
-            {
-                UC_Images uc_Images = new UC_Images();
-                addUserControl(uc_Images);
-            }
+            addUserControl(uc_images);
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
             listBox1.Items.Clear();
+        }
+
+        private void buttonSettings_Click(object sender, EventArgs e)
+        {
+            addUserControl(uc_settings);
         }
     }
 }
