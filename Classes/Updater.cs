@@ -14,7 +14,7 @@ namespace FFmpegMagick.Classes
         static readonly string fileUpdate = "FFmpegMagickUpdate.exe";
         static readonly string fileOld = $"{exename}.exe.old";
         private static readonly HttpClient client = new();
-        public static string UrlVersion = $"https://raw.githubusercontent.com/{baseDomain}/main/FFmpegMagick/FFmpegMagick.csproj";
+        public static string UrlVersion = $"https://raw.githubusercontent.com/{baseDomain}/main/FFmpegMagick.csproj";
         private static readonly string VersionUpdateUrl = client.GetStringAsync(UrlVersion).Result;
         public static string VersionUpdate = RegexVer().Match(VersionUpdateUrl).Groups[1].Value;
         public static string UrlDownload = $"https://github.com/{baseDomain}/releases/download/{VersionUpdate}/FFmpegMagickUpdate.exe";
